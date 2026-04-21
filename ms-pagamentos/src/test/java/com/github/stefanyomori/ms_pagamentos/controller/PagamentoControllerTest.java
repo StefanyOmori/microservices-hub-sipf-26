@@ -25,8 +25,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import java.util.List;
-
 @WebMvcTest(PagamentoController.class)
 public class PagamentoControllerTest {
 
@@ -188,5 +186,48 @@ public class PagamentoControllerTest {
                 .andExpect(status().isUnprocessableEntity());
 
         Mockito.verifyNoInteractions(pagamentoService);
+    }
+
+    @Test
+    void updatePagamentoShouldReturn404WhenIdDoesNotExist() throws Exception{
+        PagamentoDTO requestDTO = new PagamentoDTO(Factory.createPagamentoSemId());
+        String jsonRequestBody = objectMapper.writeValueAsString(requestDTO);
+
+        Mockito.when(pagamentoService.updatePagamento(eq(nonExistingId), any(PagamentoDTO.class)))
+                .thenThrow(new ResourceNotFoundException("Recurso não encontrado. ID: "+nonExistingId));
+
+        mockMvc.perform(put("/pagamentos/{id}", nonExistingId)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(jsonRequestBody))
+
+                .andExpect(status().isNotFound())
+                .andDo(print());
+
+        Mockito.verify(pagamentoService).updatePagamento(eq(nonExistingId), any(PagamentoDTO.class));
+        Mockito.verifyNoMoreInteractions(pagamentoService);
+    }
+
+    @Test
+    void deletePagamentoShouldReturn204WhenIdExists() throws Exception{
+        Mockito.doNothing().when(pagamentoService).deletePagamentoById(existingId);
+
+        mockMvc.perform(delete("/pagamentos/{id}", existingId))
+                .andExpect(status().isNoContent());
+
+        Mockito.verify(pagamentoService).deletePagamentoById(existingId);
+        Mockito.verifyNoMoreInteractions(pagamentoService);
+    }
+
+    @Test
+    void deletePagamentoShouldReturn404WhenIdDoesNotExist() throws Exception{
+        Mockito.doThrow(new ResourceNotFoundException("Recurso não encontrado. ID: "+nonExistingId))
+                .when(pagamentoService).deletePagamentoById(nonExistingId);
+
+        mockMvc.perform(delete("/pagamentos/{id}", nonExistingId))
+                .andExpect(status().isNotFound());
+
+        Mockito.verify(pagamentoService).deletePagamentoById(nonExistingId);
+        Mockito.verifyNoMoreInteractions(pagamentoService);
     }
 }
