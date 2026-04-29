@@ -163,6 +163,9 @@ public class PagamentoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(existingId))
+                .andExpect(jsonPath("$.nome").value(pagamento.getNome()))
+                .andExpect(jsonPath("$.numeroCartao").value(pagamento.getNumeroCartao()))
+                .andExpect(jsonPath("$.validade").value(pagamento.getValidade()))
                 .andExpect(jsonPath("$.status").value(pagamento.getStatus().name()))
                 .andExpect(jsonPath("$.pedidoId").value(pagamento.getPedidoId()));
 
