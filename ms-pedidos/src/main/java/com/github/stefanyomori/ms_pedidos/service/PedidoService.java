@@ -5,6 +5,7 @@ import com.github.stefanyomori.ms_pedidos.dto.PedidoDTO;
 import com.github.stefanyomori.ms_pedidos.entities.ItemDoPedido;
 import com.github.stefanyomori.ms_pedidos.entities.Pedido;
 import com.github.stefanyomori.ms_pedidos.entities.Status;
+import com.github.stefanyomori.ms_pedidos.exceptions.PedidoPagoException;
 import com.github.stefanyomori.ms_pedidos.exceptions.ResourceNotFoundException;
 import com.github.stefanyomori.ms_pedidos.repository.ItemDoPedidoRepository;
 import com.github.stefanyomori.ms_pedidos.repository.PedidoRepository;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PedidoService {
@@ -23,6 +25,18 @@ public class PedidoService {
 
     @Autowired
     private ItemDoPedidoRepository itemDoPedidoRepository;
+
+    @Transactional
+    public void confirmarPagamento(Long id){
+        Optional<Pedido> pedido = pedidoRepository.findById(id);
+
+        if (pedido.isEmpty()){
+            throw new ResourceNotFoundException("Pedido não encontrado. ID: "+id);
+        }
+
+        pedido.get().setStatus(Status.PAGO);
+        pedidoRepository.save(pedido.get());
+    }
 
     @Transactional(readOnly = true)
     public List<PedidoDTO> findAllPedidos() {
@@ -68,9 +82,16 @@ public class PedidoService {
     public PedidoDTO updatePedido(Long id, PedidoDTO pedidoDTO){
         try{
             Pedido pedido = pedidoRepository.getReferenceById(id);
+
+            if (pedido.getStatus().equals(Status.PAGO)){
+                throw new PedidoPagoException(
+                        String.format("Pedido id: %d já está PAGO e não pode ser alterado", id)
+                );
+            }
+
             pedido.getItens().clear();
             pedido.setData(LocalDate.now());
-            pedido.setStatus(Status.CRIADO);
+            //pedido.setStatus(Status.CRIADO);
             mapDtoToPedido(pedidoDTO, pedido);
             pedido.calcularValorTotaldoPedido();
             pedido = pedidoRepository.save(pedido);

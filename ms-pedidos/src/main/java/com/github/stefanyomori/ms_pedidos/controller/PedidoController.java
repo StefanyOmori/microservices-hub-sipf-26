@@ -18,6 +18,11 @@ public class PedidoController {
     @Autowired
     private PedidoService pedidoService;
 
+    @PutMapping("/{pedidoId}/pagamento/confirmado")
+    public void confirmarPagamento(@PathVariable Long pedidoId){
+        pedidoService.confirmarPagamento(pedidoId);
+    }
+
     // Testando load balancing: devolve a porta da instância
     @GetMapping("/port")
     public String port(@Value("${local.server.port}") String porta) {

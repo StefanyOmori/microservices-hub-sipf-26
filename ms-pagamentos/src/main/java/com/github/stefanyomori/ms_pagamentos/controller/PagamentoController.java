@@ -3,6 +3,7 @@ package com.github.stefanyomori.ms_pagamentos.controller;
 import com.github.stefanyomori.ms_pagamentos.dto.PagamentoDTO;
 import com.github.stefanyomori.ms_pagamentos.service.PagamentoService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,12 @@ import java.util.List;
 public class PagamentoController {
     @Autowired
     private PagamentoService pagamentoService;
+
+    @PatchMapping("/{id}/confirmar") //patch atualização parcial, diferente do put
+    public ResponseEntity<PagamentoDTO> confirmarPagamentoDoPedido(@PathVariable @NotNull Long id){
+        PagamentoDTO dto = pagamentoService.confirmarPagamentoDoPedido(id);
+        return ResponseEntity.ok(dto);
+    }
 
     @GetMapping
     public ResponseEntity<List<PagamentoDTO>> getAll(){
